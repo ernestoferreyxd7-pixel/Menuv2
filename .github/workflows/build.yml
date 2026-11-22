@@ -1,0 +1,38 @@
+name: build
+on:
+  workflow_dispatch:
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Descomprimir el zip
+        run: |
+          for f in *.zip; do unzip -q -o "$f"; done
+          ls
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Instalar Gradle
+        run: |
+          curl -fsSL https://services.gradle.org/distributions/gradle-8.10.2-bin.zip -o /tmp/gradle.zip
+          unzip -q /tmp/gradle.zip -d "$HOME"
+          echo "$HOME/gradle-8.10.2/bin" >> "$GITHUB_PATH"
+
+      - name: Compilar el mod
+        working-directory: desafio4-menu
+        run: gradle build --no-daemon
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: desafio4-menu-jar
+          path: |
+            desafio4-menu/build/libs/*.jar
+            !desafio4-menu/build/libs/*-dev.jar
+            !desafio4-menu/build/libs/*-sources.jar
